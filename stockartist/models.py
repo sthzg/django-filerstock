@@ -50,6 +50,13 @@ class StockPortal(models.Model):
         null=True
     )
 
+    def get_favicon(self):
+        output = '<img src="http://www.google.com/s2/favicons?domain={}">'
+        return output.format(self.website)
+
+    get_favicon.allow_tags = True
+    get_favicon.short_description = 'Favicon'
+
     def __unicode__(self):
         return u'{}'.format(self.name)
 

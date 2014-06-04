@@ -47,6 +47,9 @@ class StockLinkAdmin(ModelAdmin):
 # ______________________________________________________________________________
 #                                                             Admin: StockPortal
 class StockPortalAdmin(ModelAdmin):
+    list_display = ('get_favicon', 'name',)
+    readonly_fields = ('get_favicon',)
+    list_display_links = ('get_favicon', 'name',)
     inlines = []
 
 
