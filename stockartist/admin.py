@@ -101,7 +101,7 @@ def on_stock(self, obj):
 
 ItemAdmin.on_stock = classmethod(on_stock)
 ItemAdmin.list_display = ItemAdmin.list_display + ('on_stock',)
-ItemAdmin.list_filter = ItemAdmin.list_filter + (OnStockFilter,)
+ItemAdmin.list_filter = ItemAdmin.list_filter + [OnStockFilter]
 
 ImageAdmin.inlines = ImageAdmin.inlines + [StockLinkInlineAdmin]
 
