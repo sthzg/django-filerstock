@@ -10,9 +10,11 @@ from django.contrib.admin.options import TabularInline, ModelAdmin
 # ______________________________________________________________________________
 #                                                                        Contrib
 from filer.admin import ImageAdmin
+from filer.models import Image
 # ______________________________________________________________________________
 #                                                                         Custom
 from filersets.admin import ItemAdmin
+from filersets.models import Item
 from stockartist.models import StockLink, StockPortal
 # ______________________________________________________________________________
 #                                                                    Django Suit
@@ -90,20 +92,61 @@ class OnStockFilter(admin.SimpleListFilter):
                 filer_file__file_stocklinks__stock_portal__in=[portal.pk])
 
 
-def on_stock(self, obj):
+# ______________________________________________________________________________
+#                                              Extension for Filersets ItemAdmin
+ItemAdmin = admin.site._registry[Item].__class__
+
+
+class ExtendedItemAdmin(ItemAdmin):
     """
-    List all stock platforms that this item is listed on.
+    Extends the default filersets ItemAdmin to show a column that lists the
+    stock portals where that particular file could be found.
     """
-    stock_portals = [sl.stock_portal.name for sl
-                     in obj.filer_file.file_stocklinks.all()]
-    return ', '.join(stock_portals)
+    def __init__(self, *args, **kwargs):
+        super(ItemAdmin, self).__init__(*args, **kwargs)
+
+    def get_list_display(self, request):
+        default_list_display = super(ItemAdmin, self).get_list_display(request)
+        return list(default_list_display) + [self.on_stock]
+
+    def get_list_filter(self, request):
+        default_list_filter = super(ItemAdmin, self).get_list_filter(request)
+        return default_list_filter + [OnStockFilter]
+
+    def on_stock(self, obj):
+        """
+        List all stock platforms that this item is listed on.
+        """
+        stock_portals = [sl.stock_portal.name for sl
+                         in obj.filer_file.file_stocklinks.all()]
+        return ', '.join(stock_portals)
+
+    on_stock.allow_tags = True
+
+ItemAdmin = ExtendedItemAdmin
+
+admin.site.unregister(Item)
+admin.site.register(Item, ItemAdmin)
 
 
-ItemAdmin.on_stock = classmethod(on_stock)
-ItemAdmin.list_display = ItemAdmin.list_display + ('on_stock',)
-ItemAdmin.list_filter = ItemAdmin.list_filter + [OnStockFilter]
+# ______________________________________________________________________________
+#                                                 Extension for Filer ImageAdmin
+ImageAdmin = admin.site._registry[Image].__class__
 
-ImageAdmin.inlines = ImageAdmin.inlines + [StockLinkInlineAdmin]
+
+class ExtendedImageAdmin(ImageAdmin):
+    """
+    Extends the filer image change page with an inline for stock links.
+    """
+    def __init__(self, *args, **kwargs):
+        super(ImageAdmin, self).__init__(*args, **kwargs)
+        self.inlines = self.inlines + [StockLinkInlineAdmin]
+
+ImageAdmin = ExtendedImageAdmin
+
+admin.site.unregister(Image)
+admin.site.register(Image, ImageAdmin)
+
 
 # ______________________________________________________________________________
 #                                                                   Registration
