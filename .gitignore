@@ -54,7 +54,6 @@ coverage.xml
 docs/_build/
 .idea
 .idea/
-oimmo/
 celeryconfig.py
 include/
 share/
